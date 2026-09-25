@@ -1,20 +1,47 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+*.dex
+*.class
 
-# Unrelated projects that live in this folder
-/compose-samples/
-/nia/
-/vg_smart2.0_android/
+# Build output
+build/
+out/
+bin/
+gen/
+release/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Gradle / Kotlin caches
+.gradle/
+.kotlin/
+
+# Local configuration (SDK path, secrets)
+local.properties
+secrets.properties
+*.env
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+.navigation/
+
+# Signing
+*.jks
+*.keystore
+
+# Google services
+google-services.json
+
+# Logs and heap dumps
+*.log
+*.hprof
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
