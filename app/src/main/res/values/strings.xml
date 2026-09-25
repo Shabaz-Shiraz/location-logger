@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Location Logger</string>
+
+    <string name="action_back">Back</string>
+
+    <string name="home_intro">Every place you log ends up on your timeline.</string>
+    <string name="home_view_timeline">View timeline</string>
+
+    <string name="timeline_title">Timeline</string>
+    <string name="timeline_empty">No locations logged yet</string>
 </resources>
