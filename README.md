@@ -36,18 +36,14 @@ On Windows use `gradlew.bat` instead of `./gradlew`.
 
 ## Architecture
 
-MVVM with separate UI, domain and data layers, following the official Android
-architecture guidelines. See [Conventions](docs/CONVENTIONS.md#architecture) for details.
+Separate UI, domain and data layers, following the official Android architecture
+guidelines. The UI layer uses MVI: each screen has an immutable `State` exposed as a
+`StateFlow`, receives user actions as `Intent`s and emits one-shot `Effect`s such as
+navigation. Dependencies are provided with Hilt.
 
 ## Project structure
 
 ```
 app/
   src/main/java/com/example/locationlogger/   application code
-docs/
-  CONVENTIONS.md                              coding and git conventions
 ```
-
-## Documentation
-
-- [Conventions](docs/CONVENTIONS.md)
