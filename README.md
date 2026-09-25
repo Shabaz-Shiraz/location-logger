@@ -34,20 +34,16 @@ Android application for logging device location.
 
 On Windows use `gradlew.bat` instead of `./gradlew`.
 
-### Tests
+## Architecture
 
-```bash
-./gradlew testDebugUnitTest          # unit tests
-./gradlew connectedDebugAndroidTest  # instrumented tests (device required)
-```
+MVVM with separate UI, domain and data layers, following the official Android
+architecture guidelines. See [Conventions](docs/CONVENTIONS.md#architecture) for details.
 
 ## Project structure
 
 ```
 app/
   src/main/java/com/example/locationlogger/   application code
-  src/test/                                   unit tests
-  src/androidTest/                            instrumented tests
 docs/
   CONVENTIONS.md                              coding and git conventions
 ```
