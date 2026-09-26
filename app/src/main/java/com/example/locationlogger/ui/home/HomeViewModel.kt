@@ -50,7 +50,10 @@ class HomeViewModel @Inject constructor(
                 )
             }
             is HomeIntent.PermissionsRequestResult -> {
-                setState { copy(permissions = intent.permissions, locationPermissionBlocked = intent.blocked) }
+                val justChoseApproximate = intent.permissions.approximateOnly &&
+                    !state.value.permissions.approximateOnly
+                val blocked = intent.blocked && !justChoseApproximate
+                setState { copy(permissions = intent.permissions, locationPermissionBlocked = blocked) }
                 if (startAfterPermissions && intent.permissions.precise) checkLocationSettingsThenStart()
                 startAfterPermissions = false
             }

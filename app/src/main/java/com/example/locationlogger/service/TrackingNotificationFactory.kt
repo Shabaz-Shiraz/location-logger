@@ -15,6 +15,7 @@ import com.example.locationlogger.MainActivity
 import com.example.locationlogger.R
 import com.example.locationlogger.domain.CAPTURE_INTERVAL
 import com.example.locationlogger.domain.model.LocationEntry
+import com.example.locationlogger.ui.DisplayOptions
 import com.example.locationlogger.ui.format.formatCoordinates
 import com.example.locationlogger.ui.format.formatTime
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -70,6 +71,7 @@ class TrackingNotificationFactory @Inject constructor(
         if (!state.locationEnabled) return context.getString(R.string.notification_location_off)
         val entry = state.lastEntry ?: return context.getString(R.string.notification_first_fix)
         val place = entry.address ?: entry.point.formatCoordinates()
+        if (!DisplayOptions.SHOW_NEXT_CAPTURE) return context.getString(R.string.notification_last, place)
         val next = formatTime(context, entry.timestamp.plus(CAPTURE_INTERVAL.toJavaDuration()))
         return context.getString(R.string.notification_last_and_next, place, next)
     }

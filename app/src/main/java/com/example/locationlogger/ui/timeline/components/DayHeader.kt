@@ -33,7 +33,7 @@ fun DayHeader(
             .padding(horizontal = TimelineHorizontalPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Spacer(Modifier.width(TimeColumnWidth + RailGap))
+        Spacer(Modifier.width(timeColumnWidth + RailGap))
         TimelineRail(
             nodeCenterY = HeaderHeight / 2,
             lineAbove = !isFirst,

@@ -48,7 +48,7 @@ fun TimelineSkeleton(modifier: Modifier = Modifier) {
                     .height(IntrinsicSize.Min)
                     .padding(horizontal = TimelineHorizontalPadding)
             ) {
-                Box(Modifier.width(TimeColumnWidth).padding(top = 24.dp), contentAlignment = Alignment.TopEnd) {
+                Box(Modifier.width(timeColumnWidth).padding(top = 24.dp), contentAlignment = Alignment.TopEnd) {
                     ShimmerBox(Modifier.size(width = 40.dp, height = 14.dp))
                 }
                 Spacer(Modifier.width(RailGap))
@@ -182,7 +182,7 @@ fun TimelineEndCap(modifier: Modifier = Modifier) {
             .padding(horizontal = TimelineHorizontalPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Spacer(Modifier.width(TimeColumnWidth + RailGap))
+        Spacer(Modifier.width(timeColumnWidth + RailGap))
         Canvas(
             Modifier
                 .width(RailWidth)

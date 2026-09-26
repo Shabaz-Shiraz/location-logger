@@ -36,7 +36,11 @@ class TrackingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun resumeIfInterrupted() {
-        if (!preferences.isTracking.first() || LocationTrackingService.isRunning) return
+        if (!preferences.isTracking.first()) return
+        if (LocationTrackingService.isRunning) {
+            context.startService(LocationTrackingService.refreshNotificationIntent(context))
+            return
+        }
 
         val hasPermission = ContextCompat.checkSelfPermission(
             context,

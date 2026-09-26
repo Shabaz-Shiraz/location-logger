@@ -54,6 +54,7 @@ class LocationTrackingService : LifecycleService() {
         when (intent?.action) {
             ACTION_START -> startTracking()
             ACTION_PAUSE -> lifecycleScope.launch { pauseTracking() }
+            ACTION_REFRESH_NOTIFICATION -> notificationFactory.post(notificationState)
             // A null intent means the system restarted us after killing the process (START_STICKY).
             else -> lifecycleScope.launch { resumeAfterRestart() }
         }
@@ -136,6 +137,7 @@ class LocationTrackingService : LifecycleService() {
     companion object {
         private const val ACTION_START = "com.example.locationlogger.action.START_TRACKING"
         private const val ACTION_PAUSE = "com.example.locationlogger.action.PAUSE_TRACKING"
+        private const val ACTION_REFRESH_NOTIFICATION = "com.example.locationlogger.action.REFRESH_NOTIFICATION"
         private const val WAKE_LOCK_TAG = "LocationLogger:capture"
         private const val WAKE_LOCK_TIMEOUT_MS = 30_000L
 
@@ -148,6 +150,9 @@ class LocationTrackingService : LifecycleService() {
 
         fun pauseIntent(context: Context): Intent =
             Intent(context, LocationTrackingService::class.java).setAction(ACTION_PAUSE)
+
+        fun refreshNotificationIntent(context: Context): Intent =
+            Intent(context, LocationTrackingService::class.java).setAction(ACTION_REFRESH_NOTIFICATION)
 
         fun stopIntent(context: Context): Intent =
             Intent(context, LocationTrackingService::class.java)

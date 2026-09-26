@@ -50,12 +50,13 @@
     <string name="timeline_error_body">Something went wrong while reading your saved locations.</string>
     <string name="timeline_append_error">Couldn\'t load older entries</string>
     <string name="timeline_end">That\'s everything</string>
-    <string name="timeline_coordinates_accuracy">%1$s · ±%2$d m</string>
+    <string name="timeline_coordinates_accuracy">%1$s · ±%2$d&#160;m</string>
 
     <string name="notification_channel_name">Location logging</string>
     <string name="notification_channel_description">Shown while your location is being logged</string>
     <string name="notification_title">Logging your location</string>
     <string name="notification_first_fix">Getting your first location…</string>
+    <string name="notification_last">Last: %1$s</string>
     <string name="notification_last_and_next">Last: %1$s\nNext capture around %2$s</string>
     <string name="notification_location_off">Location is off. Turn it on to keep logging.</string>
     <string name="notification_action_pause">Pause</string>

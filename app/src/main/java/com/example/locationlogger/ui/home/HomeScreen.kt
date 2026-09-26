@@ -1,6 +1,7 @@
 package com.example.locationlogger.ui.home
 
 import android.Manifest
+import android.content.Context
 import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,6 +16,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,11 +64,13 @@ import com.example.locationlogger.domain.CAPTURE_INTERVAL
 import com.example.locationlogger.domain.model.GeoPoint
 import com.example.locationlogger.domain.model.LocationEntry
 import com.example.locationlogger.domain.model.TrackingStatus
+import com.example.locationlogger.ui.DisplayOptions
 import com.example.locationlogger.ui.components.AddressUnavailablePill
 import com.example.locationlogger.ui.components.PermissionCard
 import com.example.locationlogger.ui.components.RadarPulse
 import com.example.locationlogger.ui.format.formatCoordinates
 import com.example.locationlogger.ui.format.formatTime
+import com.example.locationlogger.ui.format.formatTimeParts
 import com.example.locationlogger.ui.mvi.CollectEffects
 import com.example.locationlogger.ui.theme.CoordinatesTextStyle
 import com.example.locationlogger.ui.theme.LocationLoggerTheme
@@ -156,11 +161,12 @@ private fun HomeContent(
         ) {
             HeroStatusCard(state)
             StatsRow(state)
-            PermissionCards(state, onIntent)
+            BlockingCards(state, onIntent)
+            TrackingButtons(state, onIntent)
             state.latestEntry?.let { entry ->
                 LatestLocationCard(entry, onClick = { onIntent(HomeIntent.OpenTimeline) })
             }
-            TrackingButtons(state, onIntent)
+            OptionalCards(state, onIntent)
         }
     }
 }
@@ -224,7 +230,7 @@ private fun StatsRow(state: HomeState) {
     val context = LocalContext.current
     val none = stringResource(R.string.stat_none)
     val next = state.nextCaptureAt
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         StatTile(
             label = stringResource(R.string.stat_entries),
             value = state.entryCount.toString(),
@@ -232,27 +238,36 @@ private fun StatsRow(state: HomeState) {
         )
         StatTile(
             label = stringResource(R.string.stat_last_capture),
-            value = state.latestEntry?.let { formatTime(context, it.timestamp) } ?: none,
+            value = state.latestEntry?.let { timeValue(context, it.timestamp) } ?: none,
             modifier = Modifier.weight(1f)
         )
-        StatTile(
-            label = stringResource(R.string.stat_next_capture),
-            value = when {
-                !state.isTracking || next == null -> none
-                !state.isLocationEnabled -> stringResource(R.string.stat_location_off)
-                // The estimate goes stale if the schedule was interrupted, e.g. by a reboot.
-                next.isBefore(Instant.now()) -> stringResource(R.string.stat_soon)
-                else -> formatTime(context, next)
-            },
-            modifier = Modifier.weight(1f)
-        )
+        if (DisplayOptions.SHOW_NEXT_CAPTURE) {
+            StatTile(
+                label = stringResource(R.string.stat_next_capture),
+                value = when {
+                    !state.isTracking || next == null -> none
+                    !state.isLocationEnabled -> stringResource(R.string.stat_location_off)
+                    // The estimate goes stale if the schedule was interrupted, e.g. by a reboot.
+                    next.isBefore(Instant.now()) -> stringResource(R.string.stat_soon)
+                    else -> timeValue(context, next)
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
+}
+
+// An ordinary space before am/pm, so at large font sizes it wraps as a whole word instead of
+// splitting "pm" (the system format uses a non-breaking space there).
+private fun timeValue(context: Context, instant: Instant): String {
+    val (clock, marker) = formatTimeParts(context, instant)
+    return if (marker == null) clock else "$clock $marker"
 }
 
 @Composable
 private fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.fillMaxHeight(),
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
@@ -260,14 +275,14 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
+                maxLines = 2
             )
         }
     }
@@ -346,7 +361,7 @@ private fun ButtonContent(icon: Int, label: String) {
 }
 
 @Composable
-private fun PermissionCards(state: HomeState, onIntent: (HomeIntent) -> Unit) {
+private fun BlockingCards(state: HomeState, onIntent: (HomeIntent) -> Unit) {
     val permissions = state.permissions
     val colors = MaterialTheme.colorScheme
 
@@ -387,6 +402,11 @@ private fun PermissionCards(state: HomeState, onIntent: (HomeIntent) -> Unit) {
             accentColor = colors.error
         )
     }
+}
+
+@Composable
+private fun OptionalCards(state: HomeState, onIntent: (HomeIntent) -> Unit) {
+    val permissions = state.permissions
 
     if (permissions.precise && !permissions.background) {
         PermissionCard(
