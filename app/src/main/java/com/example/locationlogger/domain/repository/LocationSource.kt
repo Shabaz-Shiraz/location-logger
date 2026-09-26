@@ -7,4 +7,5 @@ import kotlin.time.Duration
 interface LocationSource {
 
     fun updates(interval: Duration): Flow<LocationFix>
+    fun observeLocationEnabled(): Flow<Boolean>
 }

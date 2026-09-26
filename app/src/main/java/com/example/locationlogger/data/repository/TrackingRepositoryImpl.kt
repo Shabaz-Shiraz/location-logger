@@ -1,6 +1,8 @@
 package com.example.locationlogger.data.repository
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.example.locationlogger.data.local.TrackingPreferences
 import com.example.locationlogger.domain.model.TrackingStatus
@@ -8,6 +10,7 @@ import com.example.locationlogger.domain.repository.TrackingRepository
 import com.example.locationlogger.service.LocationTrackingService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -30,5 +33,15 @@ class TrackingRepositoryImpl @Inject constructor(
     override suspend fun stop() {
         preferences.setTracking(false)
         context.stopService(LocationTrackingService.stopIntent(context))
+    }
+
+    override suspend fun resumeIfInterrupted() {
+        if (!preferences.isTracking.first() || LocationTrackingService.isRunning) return
+
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (hasPermission) start() else preferences.setTracking(false)
     }
 }

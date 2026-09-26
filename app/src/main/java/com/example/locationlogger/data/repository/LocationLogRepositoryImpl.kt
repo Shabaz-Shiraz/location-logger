@@ -26,7 +26,6 @@ class LocationLogRepositoryImpl @Inject constructor(
 
     override fun pagedEntries(): Flow<PagingData<LocationEntry>> =
         Pager(
-            // initialLoadSize defaults to 3 * pageSize; keep every request at 15.
             config = PagingConfig(
                 pageSize = PAGE_SIZE,
                 initialLoadSize = PAGE_SIZE,

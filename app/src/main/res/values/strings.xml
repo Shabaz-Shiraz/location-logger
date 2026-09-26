@@ -2,10 +2,49 @@
     <string name="app_name">Location Logger</string>
 
     <string name="action_back">Back</string>
+    <string name="action_open_settings">Open settings</string>
+    <string name="action_turn_on">Turn on</string>
 
-    <string name="home_intro">Every place you log ends up on your timeline.</string>
+    <string name="address_unavailable">Address unavailable</string>
+
+    <string name="home_status_active">Logging your location</string>
+    <string name="home_status_paused">Logging is paused</string>
+    <plurals name="home_capture_interval">
+        <item quantity="one">A new entry every minute</item>
+        <item quantity="other">A new entry every %d minutes</item>
+    </plurals>
+    <plurals name="home_entry_count">
+        <item quantity="one">%d entry logged</item>
+        <item quantity="other">%d entries logged</item>
+    </plurals>
+    <string name="home_last_capture">Last capture at %1$s</string>
+    <string name="home_next_capture">Next capture around %1$s</string>
+    <string name="home_start">Start logging</string>
+    <string name="home_pause">Pause logging</string>
     <string name="home_view_timeline">View timeline</string>
+    <string name="home_location_required">Location needs to be on to start logging</string>
+
+    <string name="card_location_off_title">Location is turned off</string>
+    <string name="card_location_off_body">Turn on location so new entries can be recorded.</string>
+    <string name="card_precise_title">Precise location is off</string>
+    <string name="card_precise_body">With approximate location, entries can be several kilometres off. Allow precise location to start logging.</string>
+    <string name="card_precise_action">Use precise location</string>
+    <string name="card_location_denied_title">Location access is off</string>
+    <string name="card_location_denied_body">Location Logger needs precise location to record where you are. Allow it in Settings to start logging.</string>
+    <string name="card_background_title">Keep logging after a restart</string>
+    <string name="card_background_body">If Android restarts the app in the background, it can only carry on logging with location access set to \"Allow all the time\".</string>
+    <string name="card_background_action">Allow all the time</string>
+    <string name="card_notifications_title">Notifications are off</string>
+    <string name="card_notifications_body">Logging still works, but you won\'t see its notification or be able to pause from there.</string>
 
     <string name="timeline_title">Timeline</string>
     <string name="timeline_empty">No locations logged yet</string>
+
+    <string name="notification_channel_name">Location logging</string>
+    <string name="notification_channel_description">Shown while your location is being logged</string>
+    <string name="notification_title">Logging your location</string>
+    <string name="notification_first_fix">Getting your first location…</string>
+    <string name="notification_last_and_next">Last: %1$s\nNext capture around %2$s</string>
+    <string name="notification_location_off">Location is off. Turn it on to keep logging.</string>
+    <string name="notification_action_pause">Pause</string>
 </resources>

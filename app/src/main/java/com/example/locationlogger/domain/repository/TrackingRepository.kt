@@ -10,4 +10,6 @@ interface TrackingRepository {
     suspend fun start()
 
     suspend fun stop()
+
+    suspend fun resumeIfInterrupted()
 }
