@@ -4,6 +4,7 @@
     <string name="action_back">Back</string>
     <string name="action_open_settings">Open settings</string>
     <string name="action_turn_on">Turn on</string>
+    <string name="action_retry">Try again</string>
 
     <string name="address_unavailable">Address unavailable</string>
 
@@ -13,12 +14,13 @@
         <item quantity="one">A new entry every minute</item>
         <item quantity="other">A new entry every %d minutes</item>
     </plurals>
-    <plurals name="home_entry_count">
-        <item quantity="one">%d entry logged</item>
-        <item quantity="other">%d entries logged</item>
-    </plurals>
-    <string name="home_last_capture">Last capture at %1$s</string>
-    <string name="home_next_capture">Next capture around %1$s</string>
+    <string name="home_latest_title">Latest location · %1$s</string>
+    <string name="stat_entries">Entries</string>
+    <string name="stat_last_capture">Last capture</string>
+    <string name="stat_next_capture">Next capture</string>
+    <string name="stat_none">—</string>
+    <string name="stat_location_off">Off</string>
+    <string name="stat_soon">Soon</string>
     <string name="home_start">Start logging</string>
     <string name="home_pause">Pause logging</string>
     <string name="home_view_timeline">View timeline</string>
@@ -37,8 +39,18 @@
     <string name="card_notifications_title">Notifications are off</string>
     <string name="card_notifications_body">Logging still works, but you won\'t see its notification or be able to pause from there.</string>
 
+    <string name="day_today">Today</string>
+    <string name="day_yesterday">Yesterday</string>
+
     <string name="timeline_title">Timeline</string>
-    <string name="timeline_empty">No locations logged yet</string>
+    <string name="timeline_empty_title">Your timeline is empty</string>
+    <string name="timeline_empty_body">Start logging on the Home screen and the places you\'ve been will show up here.</string>
+    <string name="timeline_back_home">Back to Home</string>
+    <string name="timeline_error_title">Couldn\'t load your timeline</string>
+    <string name="timeline_error_body">Something went wrong while reading your saved locations.</string>
+    <string name="timeline_append_error">Couldn\'t load older entries</string>
+    <string name="timeline_end">That\'s everything</string>
+    <string name="timeline_coordinates_accuracy">%1$s · ±%2$d m</string>
 
     <string name="notification_channel_name">Location logging</string>
     <string name="notification_channel_description">Shown while your location is being logged</string>

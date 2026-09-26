@@ -5,33 +5,51 @@ import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -43,7 +61,9 @@ import com.example.locationlogger.domain.CAPTURE_INTERVAL
 import com.example.locationlogger.domain.model.GeoPoint
 import com.example.locationlogger.domain.model.LocationEntry
 import com.example.locationlogger.domain.model.TrackingStatus
+import com.example.locationlogger.ui.components.AddressUnavailablePill
 import com.example.locationlogger.ui.components.PermissionCard
+import com.example.locationlogger.ui.components.RadarPulse
 import com.example.locationlogger.ui.format.formatCoordinates
 import com.example.locationlogger.ui.format.formatTime
 import com.example.locationlogger.ui.mvi.CollectEffects
@@ -51,6 +71,7 @@ import com.example.locationlogger.ui.theme.CoordinatesTextStyle
 import com.example.locationlogger.ui.theme.LocationLoggerTheme
 import kotlinx.coroutines.launch
 import java.time.Instant
+import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreen(
@@ -117,7 +138,12 @@ private fun HomeContent(
     onIntent: (HomeIntent) -> Unit
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.app_name)) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(
@@ -125,97 +151,204 @@ private fun HomeContent(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            StatusCard(state)
+            HeroStatusCard(state)
+            StatsRow(state)
             PermissionCards(state, onIntent)
-
-            if (state.isTracking) {
-                FilledTonalButton(
-                    onClick = { onIntent(HomeIntent.PauseClicked) },
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text(stringResource(R.string.home_pause)) }
-            } else {
-                Button(
-                    onClick = { onIntent(HomeIntent.StartClicked) },
-                    enabled = state.canStart,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text(stringResource(R.string.home_start)) }
+            state.latestEntry?.let { entry ->
+                LatestLocationCard(entry, onClick = { onIntent(HomeIntent.OpenTimeline) })
             }
-            OutlinedButton(
-                onClick = { onIntent(HomeIntent.OpenTimeline) },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text(stringResource(R.string.home_view_timeline)) }
+            TrackingButtons(state, onIntent)
         }
     }
 }
 
 @Composable
-private fun StatusCard(state: HomeState) {
-    val context = LocalContext.current
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (state.isTracking) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceContainerHigh
-            }
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+private fun HeroStatusCard(state: HomeState) {
+    val colors = MaterialTheme.colorScheme
+    val top by animateColorAsState(
+        if (state.isTracking) colors.primaryContainer else colors.surfaceContainerHigh,
+        label = "heroTop"
+    )
+    val bottom by animateColorAsState(
+        if (state.isTracking) colors.surfaceContainerLow else colors.surfaceContainerHigh,
+        label = "heroBottom"
+    )
+
+    Surface(shape = MaterialTheme.shapes.extraLarge, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .background(Brush.verticalGradient(listOf(top, bottom)))
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = stringResource(
-                    if (state.isTracking) R.string.home_status_active else R.string.home_status_paused
-                ),
-                style = MaterialTheme.typography.titleLarge
+            RadarPulse(
+                active = state.isTracking,
+                activeColor = colors.tertiary,
+                idleColor = colors.outline
             )
-            Text(
-                text = pluralStringResource(
-                    R.plurals.home_capture_interval,
-                    CAPTURE_INTERVAL.inWholeMinutes.toInt(),
-                    CAPTURE_INTERVAL.inWholeMinutes.toInt()
-                ),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = pluralStringResource(R.plurals.home_entry_count, state.entryCount, state.entryCount),
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            val latest = state.latestEntry
-            if (latest != null) {
+            Spacer(Modifier.width(16.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                AnimatedContent(
+                    targetState = state.isTracking,
+                    transitionSpec = {
+                        (fadeIn() + slideInVertically { it / 2 }) togetherWith
+                            (fadeOut() + slideOutVertically { -it / 2 })
+                    },
+                    label = "heroStatus"
+                ) { tracking ->
+                    Text(
+                        text = stringResource(if (tracking) R.string.home_status_active else R.string.home_status_paused),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = colors.onSurface
+                    )
+                }
                 Text(
-                    text = stringResource(R.string.home_last_capture, formatTime(context, latest.timestamp)),
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-                Text(
-                    text = latest.address ?: stringResource(R.string.address_unavailable),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(text = latest.point.formatCoordinates(), style = CoordinatesTextStyle)
-            }
-
-            val next = state.nextCaptureAt
-            if (state.isTracking && state.isLocationEnabled && next != null) {
-                Text(
-                    text = stringResource(R.string.home_next_capture, formatTime(context, next)),
+                    text = pluralStringResource(
+                        R.plurals.home_capture_interval,
+                        CAPTURE_INTERVAL.inWholeMinutes.toInt(),
+                        CAPTURE_INTERVAL.inWholeMinutes.toInt()
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 8.dp)
+                    color = colors.onSurfaceVariant
                 )
             }
         }
     }
+}
+
+@Composable
+private fun StatsRow(state: HomeState) {
+    val context = LocalContext.current
+    val none = stringResource(R.string.stat_none)
+    val next = state.nextCaptureAt
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        StatTile(
+            label = stringResource(R.string.stat_entries),
+            value = state.entryCount.toString(),
+            modifier = Modifier.weight(1f)
+        )
+        StatTile(
+            label = stringResource(R.string.stat_last_capture),
+            value = state.latestEntry?.let { formatTime(context, it.timestamp) } ?: none,
+            modifier = Modifier.weight(1f)
+        )
+        StatTile(
+            label = stringResource(R.string.stat_next_capture),
+            value = when {
+                !state.isTracking || next == null -> none
+                !state.isLocationEnabled -> stringResource(R.string.stat_location_off)
+                // The estimate goes stale if the schedule was interrupted, e.g. by a reboot.
+                next.isBefore(Instant.now()) -> stringResource(R.string.stat_soon)
+                else -> formatTime(context, next)
+            },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+private fun LatestLocationCard(entry: LocationEntry, onClick: () -> Unit) {
+    val context = LocalContext.current
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                text = stringResource(R.string.home_latest_title, formatTime(context, entry.timestamp)),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+            if (entry.address != null) {
+                Text(text = entry.address, style = MaterialTheme.typography.titleMedium)
+            } else {
+                AddressUnavailablePill()
+            }
+            Text(
+                text = stringResource(
+                    R.string.timeline_coordinates_accuracy,
+                    entry.point.formatCoordinates(),
+                    entry.accuracyMeters.roundToInt()
+                ),
+                style = CoordinatesTextStyle,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun TrackingButtons(state: HomeState, onIntent: (HomeIntent) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (state.isTracking) {
+            FilledTonalButton(
+                onClick = { onIntent(HomeIntent.PauseClicked) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) {
+                ButtonContent(R.drawable.ic_pause, stringResource(R.string.home_pause))
+            }
+        } else {
+            Button(
+                onClick = { onIntent(HomeIntent.StartClicked) },
+                enabled = state.canStart,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) {
+                ButtonContent(R.drawable.ic_play, stringResource(R.string.home_start))
+            }
+        }
+        OutlinedButton(
+            onClick = { onIntent(HomeIntent.OpenTimeline) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) { Text(stringResource(R.string.home_view_timeline)) }
+    }
+}
+
+@Composable
+private fun ButtonContent(icon: Int, label: String) {
+    Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(20.dp))
+    Spacer(Modifier.width(8.dp))
+    Text(label, style = MaterialTheme.typography.titleMedium)
 }
 
 @Composable
 private fun PermissionCards(state: HomeState, onIntent: (HomeIntent) -> Unit) {
     val permissions = state.permissions
+    val colors = MaterialTheme.colorScheme
 
     if (!state.isLocationEnabled) {
         PermissionCard(
@@ -223,8 +356,10 @@ private fun PermissionCards(state: HomeState, onIntent: (HomeIntent) -> Unit) {
             body = stringResource(R.string.card_location_off_body),
             actionLabel = stringResource(R.string.action_turn_on),
             onAction = { onIntent(HomeIntent.TurnOnLocationClicked) },
-            containerColor = MaterialTheme.colorScheme.errorContainer,
-            contentColor = MaterialTheme.colorScheme.onErrorContainer
+            icon = R.drawable.ic_notification,
+            containerColor = colors.errorContainer,
+            contentColor = colors.onErrorContainer,
+            accentColor = colors.error
         )
     }
 
@@ -235,13 +370,21 @@ private fun PermissionCards(state: HomeState, onIntent: (HomeIntent) -> Unit) {
             actionLabel = stringResource(
                 if (state.locationPermissionBlocked) R.string.action_open_settings else R.string.card_precise_action
             ),
-            onAction = { onIntent(HomeIntent.AllowPreciseClicked) }
+            onAction = { onIntent(HomeIntent.AllowPreciseClicked) },
+            icon = R.drawable.ic_notification,
+            containerColor = colors.tertiaryContainer,
+            contentColor = colors.onTertiaryContainer,
+            accentColor = colors.tertiary
         )
         !permissions.precise && state.locationPermissionBlocked -> PermissionCard(
             title = stringResource(R.string.card_location_denied_title),
             body = stringResource(R.string.card_location_denied_body),
             actionLabel = stringResource(R.string.action_open_settings),
-            onAction = { onIntent(HomeIntent.OpenAppSettingsClicked) }
+            onAction = { onIntent(HomeIntent.OpenAppSettingsClicked) },
+            icon = R.drawable.ic_notification,
+            containerColor = colors.errorContainer,
+            contentColor = colors.onErrorContainer,
+            accentColor = colors.error
         )
     }
 
@@ -251,8 +394,7 @@ private fun PermissionCards(state: HomeState, onIntent: (HomeIntent) -> Unit) {
             body = stringResource(R.string.card_background_body),
             actionLabel = stringResource(R.string.card_background_action),
             onAction = { onIntent(HomeIntent.AllowBackgroundClicked) },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            contentColor = MaterialTheme.colorScheme.onSurface
+            icon = R.drawable.ic_clock
         )
     }
 
@@ -262,13 +404,20 @@ private fun PermissionCards(state: HomeState, onIntent: (HomeIntent) -> Unit) {
             body = stringResource(R.string.card_notifications_body),
             actionLabel = stringResource(R.string.action_turn_on),
             onAction = { onIntent(HomeIntent.NotificationSettingsClicked) },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            contentColor = MaterialTheme.colorScheme.onSurface
+            icon = R.drawable.ic_bell
         )
     }
 }
 
-@Preview
+private val previewEntry = LocationEntry(
+    id = 1,
+    timestamp = Instant.parse("2026-09-26T04:30:00Z"),
+    point = GeoPoint(9.98160, 76.28000),
+    accuracyMeters = 12f,
+    address = "Marine Drive, Ernakulam, Kochi, Kerala 682031, India"
+)
+
+@Preview(name = "Tracking")
 @Composable
 private fun HomeContentTrackingPreview() {
     LocationLoggerTheme {
@@ -277,14 +426,8 @@ private fun HomeContentTrackingPreview() {
                 trackingStatus = TrackingStatus.Active,
                 permissions = LocationPermissions(precise = true, approximate = true, notifications = true),
                 entryCount = 42,
-                latestEntry = LocationEntry(
-                    id = 1,
-                    timestamp = Instant.parse("2026-09-26T09:30:00Z"),
-                    point = GeoPoint(12.9716, 77.5946),
-                    accuracyMeters = 8f,
-                    address = "MG Road, Bengaluru, Karnataka 560001, India"
-                ),
-                nextCaptureAt = Instant.parse("2026-09-26T09:40:00Z")
+                latestEntry = previewEntry,
+                nextCaptureAt = Instant.parse("2026-09-26T04:40:00Z")
             ),
             snackbarHostState = remember { SnackbarHostState() },
             onIntent = {}
@@ -292,14 +435,16 @@ private fun HomeContentTrackingPreview() {
     }
 }
 
-@Preview
+@Preview(name = "Paused, dark")
 @Composable
-private fun HomeContentApproximatePreview() {
-    LocationLoggerTheme {
+private fun HomeContentPausedDarkPreview() {
+    LocationLoggerTheme(darkTheme = true) {
         HomeContent(
             state = HomeState(
                 permissions = LocationPermissions(approximate = true),
-                isLocationEnabled = false
+                isLocationEnabled = false,
+                entryCount = 3,
+                latestEntry = previewEntry.copy(address = null)
             ),
             snackbarHostState = remember { SnackbarHostState() },
             onIntent = {}

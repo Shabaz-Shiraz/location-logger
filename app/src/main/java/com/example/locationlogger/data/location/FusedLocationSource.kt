@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.location.LocationManager
 import android.os.Looper
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import com.example.locationlogger.domain.model.GeoPoint
@@ -39,6 +40,7 @@ class FusedLocationSource @Inject constructor(
         val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, intervalMillis)
             .setMinUpdateIntervalMillis(intervalMillis)
             .setMaxUpdateDelayMillis(0)
+            .setMaxUpdateAgeMillis(MAX_INITIAL_FIX_AGE_MS)
             .build()
 
         val callback = object : LocationCallback() {
@@ -82,4 +84,8 @@ class FusedLocationSource @Inject constructor(
 
         awaitClose { context.unregisterReceiver(receiver) }
     }.distinctUntilChanged()
+
+    private companion object {
+        const val MAX_INITIAL_FIX_AGE_MS = 30_000L
+    }
 }
